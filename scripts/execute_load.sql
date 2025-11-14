@@ -26,6 +26,9 @@ PROMPT '';
 PROMPT 'Este script cargará los 148,770 registros del CSV';
 PROMPT 'a las tablas de la base de datos.';
 PROMPT '';
+PROMPT 'NOTA: Dimensión tiempo y cancelaciones ahora se cargan';
+PROMPT '      directamente en la tabla BOOKINGS (modelo simplificado).';
+PROMPT '';
 PROMPT '════════════════════════════════════════════════════════';
 PROMPT '';
 
@@ -161,8 +164,7 @@ BEGIN
 END;
 /
 
-
-
+-- Continuar con catálogos
 PROMPT '';
 PROMPT 'Presiona ENTER para continuar con la carga de catálogos...';
 PAUSE
@@ -171,7 +173,7 @@ PAUSE
 -- PASO 3: Cargar catálogos
 -- =====================================================
 
-PROMPT '[PASO 2/6] Cargando catálogos...';
+PROMPT '[PASO 2/5] Cargando catálogos...';
 
 BEGIN
     sp_load_catalogs;
@@ -180,17 +182,17 @@ EXCEPTION
         DBMS_OUTPUT.PUT_LINE('✗ ERROR en catálogos: ' || SQLERRM);
         RAISE;
 END;
-END;
+/
 
 PROMPT '';
 PROMPT 'Presiona ENTER para continuar con clientes...';
 PAUSE
 
 -- =====================================================
--- PASO 4: Cargar clientes
+-- PASO 3: Cargar clientes
 -- =====================================================
 
-PROMPT '[PASO 3/6] Cargando clientes...';
+PROMPT '[PASO 3/5] Cargando clientes...';
 
 BEGIN
     sp_load_customers;
@@ -202,33 +204,14 @@ END;
 /
 
 PROMPT '';
-PROMPT 'Presiona ENTER para continuar con dimensión tiempo...';
-PAUSE
-
--- =====================================================
--- PASO 5: Cargar dimensión tiempo
--- =====================================================
-
-PROMPT '[PASO 4/6] Cargando dimensión tiempo...';
-
-BEGIN
-    sp_load_time_dimension;
-EXCEPTION
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('✗ ERROR en time_dimension: ' || SQLERRM);
-        RAISE;
-END;
-/
-
-PROMPT '';
 PROMPT 'Presiona ENTER para continuar con bookings...';
 PAUSE
 
 -- =====================================================
--- PASO 6: Cargar bookings
+-- PASO 4: Cargar bookings (incluye tiempo y cancelaciones)
 -- =====================================================
 
-PROMPT '[PASO 5/6] Cargando bookings (esto puede tomar unos minutos)...';
+PROMPT '[PASO 4/5] Cargando bookings (esto puede tomar unos minutos)...';
 
 BEGIN
     sp_load_bookings;
@@ -240,26 +223,26 @@ END;
 /
 
 PROMPT '';
-PROMPT 'Presiona ENTER para continuar con cancelaciones y ratings...';
+PROMPT 'Presiona ENTER para continuar con ratings...';
 PAUSE
 
 -- =====================================================
--- PASO 7: Cargar cancelaciones y ratings
+-- PASO 5: Cargar ratings
 -- =====================================================
 
-PROMPT '[PASO 6/6] Cargando cancelaciones y ratings...';
+PROMPT '[PASO 5/5] Cargando ratings...';
 
 BEGIN
     sp_load_cancellations_ratings;
 EXCEPTION
     WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('✗ ERROR en cancelaciones/ratings: ' || SQLERRM);
+        DBMS_OUTPUT.PUT_LINE('✗ ERROR en ratings: ' || SQLERRM);
         RAISE;
 END;
 /
 
 -- =====================================================
--- PASO 8: Mostrar resumen
+-- PASO 6: Mostrar resumen
 -- =====================================================
 
 PROMPT '';

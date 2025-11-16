@@ -1,53 +1,56 @@
-# Proyecto: Sistema de Gestión de Viajes Uber
+# Sistema de Gestión de Viajes Uber
 
-## Descripción
-Sistema de base de datos para la gestión integral de operaciones de viajes compartidos tipo Uber, incluyendo reservas, conductores, clientes, calificaciones, cancelaciones y análisis temporal de demanda.
+## 🚀 Instalación Rápida
 
-## Objetivo
-Diseñar e implementar una base de datos Oracle normalizada (3FN) que permita:
-- Gestionar reservas de viajes con trazabilidad completa
-- Administrar información de clientes y conductores
-- Registrar y analizar cancelaciones (por cliente y conductor)
-- Gestionar calificaciones bidireccionales (cliente ↔ conductor)
-- Realizar análisis temporal de demanda y patrones de uso
-- Optimizar operaciones mediante reportes y métricas clave
-- Auditar transacciones y operaciones críticas
-
-## Dataset Fuente
-**Uber Ride Analytics Dataset 2024**
-- Fuente: [Kaggle - Uber Ride Analytics Dashboard](https://www.kaggle.com/datasets/yashdevladdha/uber-ride-analytics-dashboard/data)
-- Total de registros: 148,770 bookings
-- Período: Año 2024 completo
-- Variables: 21 columnas incluyendo fecha, hora, estado de reserva, ubicaciones, tarifas, ratings, etc.
-
-## Estructura del Proyecto
-
-```
-Proyecto_logistica_portuaria/
-├── README.md                        # Documentación principal
-├── .gitattributes                   # Configuración para archivos grandes
-├── ncr_ride_bookings.csv           # Dataset de Uber (descargado de Kaggle)
-├── modelo/
-│   ├── modelo_modeler.dmd          # Archivo del modelo Data Modeler
-│   ├── modelo_er.md                # Modelo ER en Mermaid + Documentación
-│   └── modelo_modeler/              # Archivos generados por Oracle Data Modeler
-├── scripts/
-│   ├── tbs_and_user.sql            # Creación de tablespace y usuario
-│   ├── create_user.sql             # Creación del usuario y privilegios
-│   ├── create_tables.sql           # DDL de todas las tablas
-│   ├── create_packages.sql         # Creación de paquetes PL/SQL
-│   ├── fill_tables.sql             # Carga de datos desde CSV
-│   ├── triggers_control.sql        # Triggers de auditoría y control
-│   ├── paquete_gestion_contenedores.sql  → paquete_gestion_viajes.sql
-│   ├── paquete_gestion_buques.sql        → paquete_gestion_conductores.sql
-│   ├── paquete_reportes.sql        # Reportes y métricas
-│   └── paquete_auditoria.sql       # Sistema de auditoría
-└── images/                          # Diagramas y capturas del modelo
+### 1. Crear Usuario (como SYSDBA)
+```bash
+sqlplus / as sysdba
+@scripts/tbs_and_user.sql
+exit
 ```
 
-## Modelo de Datos
+### 2. Crear Tablas
+```bash
+sqlplus uber_admin/UberAdmin2025@localhost:1521/ORCLPDB1
+@scripts/create_tables.sql
+exit
+```
 
-### Diagrama ER Completo
+### 3. Cargar Datos CSV
+```bash
+sqlplus uber_admin/UberAdmin2025@localhost:1521/ORCLPDB1
+@scripts/setup_load_environment.sql
+@scripts/execute_load.sql
+exit
+```
+
+---
+
+## 📊 Dataset
+**Uber Ride Analytics 2024** (Kaggle)
+- 148,770 registros de viajes
+- Archivo: `ncr_ride_bookings.csv`
+
+## 🗂️ Modelo Simplificado
+- **BOOKINGS**: Tabla principal con status CHECK, fecha/hora integrada, columnas de cancelación
+- **CUSTOMERS, DRIVERS**: Información de usuarios
+- **RATINGS**: Calificaciones bidireccionales
+- Eliminadas: TIME_DIMENSION, BOOKING_STATUS, CANCELLATIONS (consolidadas en BOOKINGS)
+
+## 📁 Estructura
+```
+Uber-booking/
+├── README.md                  # Esta guía
+├── ncr_ride_bookings.csv     # Dataset (148,770 registros)
+└── scripts/
+    ├── tbs_and_user.sql      # PASO 1: Crear usuario (SYSDBA)
+    ├── create_tables.sql     # PASO 2: Crear tablas
+    ├── setup_load_environment.sql  # PASO 3a: Preparar carga
+    ├── execute_load.sql      # PASO 3b: Ejecutar carga
+    └── README.md             # Documentación detallada
+```
+
+Ver `scripts/README.md` para más detalles.
 Ver archivo: [`modelo/modelo_er.md`](modelo/modelo_er.md)
 
 El modelo incluye un **diagrama Mermaid interactivo** con todas las entidades, relaciones y documentación detallada.

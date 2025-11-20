@@ -51,8 +51,9 @@ END;
 /
 
 -- =====================================================
--- PASO 4: Cargar bookings (incluye tiempo y cancelaciones)
--- =====================================================
+ALTER SESSION SET NLS_NUMERIC_CHARACTERS = '.,'; 
+-- '.,' significa que el punto es el decimal y la coma es el separador de miles
+
 PROMPT [4/5] Cargando bookings...
 BEGIN
     sp_load_bookings;
@@ -80,3 +81,4 @@ END;
 PROMPT ============================================
 PROMPT ✓ CARGA COMPLETADA
 PROMPT ============================================
+

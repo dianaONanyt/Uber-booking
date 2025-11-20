@@ -51,6 +51,18 @@ CREATE TABLE PAYMENT_METHODS (
         ))
 );
 
+
+-- DDL para la tabla de registro de auditoría
+CREATE TABLE AUDIT_LOG (
+    log_id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    booking_id VARCHAR2(50),
+    operation_type VARCHAR2(20) NOT NULL, 
+    old_value VARCHAR2(255),
+    new_value VARCHAR2(255),
+    performed_by VARCHAR2(50), 
+    log_timestamp TIMESTAMP DEFAULT SYSTIMESTAMP
+);
+
 -- =================================================================
 -- TABLA PRINCIPAL: BOOKINGS
 -- =================================================================

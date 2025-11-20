@@ -185,7 +185,6 @@ BEGIN
 END;
 /
 
--- Procedimiento: Cargar bookings
 CREATE OR REPLACE PROCEDURE sp_load_bookings AS
     v_count NUMBER;
     v_duplicates NUMBER;
@@ -195,6 +194,7 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('  CARGANDO BOOKINGS (tabla principal) - time fields and cancellation reasons stored in BOOKINGS');
     DBMS_OUTPUT.PUT_LINE('──────────────────────────────────────────────');
     
+    -- Cuenta duplicados en el CSV
     SELECT COUNT(*) - COUNT(DISTINCT REPLACE(REPLACE(booking_id, '"', ''), '''', ''))
     INTO v_duplicates
     FROM csv_temp;
@@ -203,59 +203,102 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE('  ⚠ Detectados ' || v_duplicates || ' booking_id duplicados - insertando solo primer registro de cada uno');
     END IF;
     
+    -- La inserción principal
     INSERT INTO BOOKINGS (
-       booking_id, booking_date, booking_time, customer_id, vehicle_type_id,
-       pickup_location_id, drop_location_id, payment_method_id, status,
-       booking_value, ride_distance, driver_arrival_time_minutes, trip_duration_minutes,
-       cancelled_by, cancellation_reason, incomplete_reason
+        booking_id, booking_date, booking_time, customer_id, vehicle_type_id,
+        pickup_location_id, drop_location_id, payment_method_id, status,
+        booking_value, ride_distance, driver_arrival_time_minutes, trip_duration_minutes,
+        cancelled_by, cancellation_reason, incomplete_reason
     )
     SELECT
-       booking_id_clean,
-       booking_date,
-       booking_time,
-       customer_id_clean,
-       vehicle_type_id,
-       pickup_location_id,
-       drop_location_id,
-       payment_method_id,
-       status_clean,
-       booking_value,
-       ride_distance,
-       driver_arrival_time_minutes,
-       trip_duration_minutes,
-       cancelled_by,
-       cancellation_reason,
-       incomplete_reason
+        booking_id_clean,
+        booking_date,
+        booking_time,
+        customer_id_clean,
+        vehicle_type_id,
+        pickup_location_id,
+        drop_location_id,
+        payment_method_id,
+        status_clean,
+        booking_value,
+        ride_distance,
+        driver_arrival_time_minutes,
+        trip_duration_minutes,
+        cancelled_by,
+        cancellation_reason,
+        incomplete_reason
     FROM (
         SELECT
-           REPLACE(REPLACE(csv.booking_id, '"', ''), '''', '') AS booking_id_clean,
-           TO_DATE(REPLACE(REPLACE(csv.date_str, '"', ''), '''', ''), 'YYYY-MM-DD') AS booking_date,
-           TO_TIMESTAMP(REPLACE(REPLACE(csv.time_str, '"', ''), '''', ''), 'HH24:MI:SS') AS booking_time,
-           REPLACE(REPLACE(csv.customer_id, '"', ''), '''', '') AS customer_id_clean,
-           vt.vehicle_type_id,
-           pl.location_id AS pickup_location_id,
-           dl.location_id AS drop_location_id,
-           pm.payment_method_id,
-           REPLACE(REPLACE(csv.booking_status, '"', ''), '''', '') AS status_clean,
-           CASE WHEN csv.booking_value = 'null' OR TRIM(csv.booking_value) IS NULL 
-               THEN NULL ELSE TO_NUMBER(REPLACE(csv.booking_value, '"', '')) END AS booking_value,
-           CASE WHEN csv.ride_distance = 'null' OR TRIM(csv.ride_distance) IS NULL 
-               THEN NULL ELSE TO_NUMBER(REPLACE(csv.ride_distance, '"', '')) END AS ride_distance,
-           CASE WHEN csv.avg_vtat = 'null' OR TRIM(csv.avg_vtat) IS NULL 
-               THEN NULL ELSE TO_NUMBER(REPLACE(csv.avg_vtat, '"', '')) END AS driver_arrival_time_minutes,
-           CASE WHEN csv.avg_ctat = 'null' OR TRIM(csv.avg_ctat) IS NULL 
-               THEN NULL ELSE TO_NUMBER(REPLACE(csv.avg_ctat, '"', '')) END AS trip_duration_minutes,
-           CASE WHEN csv.cancelled_by_customer = '1' THEN 'Customer'
-               WHEN csv.cancelled_by_driver = '1' THEN 'Driver'
-               WHEN csv.incomplete_ride = '1' THEN 'System'
-               ELSE NULL END AS cancelled_by,
-           CASE WHEN csv.cancelled_by_customer = '1' THEN REPLACE(REPLACE(csv.reason_cancel_customer, '"', ''), '''', '')
-               WHEN csv.cancelled_by_driver = '1' THEN REPLACE(REPLACE(csv.reason_cancel_driver, '"', ''), '''', '')
-               ELSE NULL END AS cancellation_reason,
-           CASE WHEN csv.incomplete_ride = '1' THEN REPLACE(REPLACE(csv.reason_incomplete, '"', ''), '''', '')
-               ELSE NULL END AS incomplete_reason,
-           ROW_NUMBER() OVER (PARTITION BY REPLACE(REPLACE(csv.booking_id, '"', ''), '''', '') ORDER BY csv.date_str, csv.time_str) AS rn
+            REPLACE(REPLACE(csv.booking_id, '"', ''), '''', '') AS booking_id_clean,
+            TO_DATE(REPLACE(REPLACE(csv.date_str, '"', ''), '''', ''), 'YYYY-MM-DD') AS booking_date,
+            TO_TIMESTAMP(REPLACE(REPLACE(csv.time_str, '"', ''), '''', ''), 'HH24:MI:SS') AS booking_time,
+            REPLACE(REPLACE(csv.customer_id, '"', ''), '''', '') AS customer_id_clean,
+            vt.vehicle_type_id,
+            pl.location_id AS pickup_location_id,
+            dl.location_id AS drop_location_id,
+            pm.payment_method_id,
+            REPLACE(REPLACE(csv.booking_status, '"', ''), '''', '') AS status_clean,
+            
+            -- CORRECCIÓN 1: booking_value (Añadido TRIM y NLS)
+            CASE 
+                WHEN csv.booking_value = 'null' OR TRIM(csv.booking_value) IS NULL THEN NULL 
+                ELSE TO_NUMBER(
+                    TRIM(REPLACE(csv.booking_value, '"', '')), -- TRIM para espacios
+                    'FM9999999999.99', 
+                    'NLS_NUMERIC_CHARACTERS=''.,'''
+                ) 
+            END AS booking_value,
+            
+            -- CORRECCIÓN 2: ride_distance (Añadido TRIM y NLS)
+            CASE 
+                WHEN csv.ride_distance = 'null' OR TRIM(csv.ride_distance) IS NULL THEN NULL 
+                ELSE TO_NUMBER(
+                    TRIM(REPLACE(csv.ride_distance, '"', '')), -- TRIM para espacios
+                    'FM9999999999.99', 
+                    'NLS_NUMERIC_CHARACTERS=''.,'''
+                ) 
+            END AS ride_distance,
+            
+            -- CORRECCIÓN 3: avg_vtat (Añadido TRIM y NLS)
+            CASE 
+                WHEN csv.avg_vtat = 'null' OR TRIM(csv.avg_vtat) IS NULL THEN NULL 
+                ELSE TO_NUMBER(
+                    TRIM(REPLACE(csv.avg_vtat, '"', '')), -- TRIM para espacios
+                    'FM9999999999.99', 
+                    'NLS_NUMERIC_CHARACTERS=''.,'''
+                ) 
+            END AS driver_arrival_time_minutes,
+            
+            -- CORRECCIÓN 4: avg_ctat (Añadido TRIM y NLS)
+            CASE 
+                WHEN csv.avg_ctat = 'null' OR TRIM(csv.avg_ctat) IS NULL THEN NULL 
+                ELSE TO_NUMBER(
+                    TRIM(REPLACE(csv.avg_ctat, '"', '')), -- TRIM para espacios
+                    'FM9999999999.99', 
+                    'NLS_NUMERIC_CHARACTERS=''.,'''
+                ) 
+            END AS trip_duration_minutes,
+            
+            -- Lógica para cancelled_by
+            CASE WHEN csv.cancelled_by_customer = '1' THEN 'Customer'
+                WHEN csv.cancelled_by_driver = '1' THEN 'Driver'
+                WHEN csv.incomplete_ride = '1' THEN 'System'
+                ELSE NULL END AS cancelled_by,
+                
+            -- Lógica para cancellation_reason
+            CASE WHEN csv.cancelled_by_customer = '1' THEN REPLACE(REPLACE(csv.reason_cancel_customer, '"', ''), '''', '')
+                WHEN csv.cancelled_by_driver = '1' THEN REPLACE(REPLACE(csv.reason_cancel_driver, '"', ''), '''', '')
+                ELSE NULL END AS cancellation_reason,
+                
+            -- Lógica para incomplete_reason
+            CASE WHEN csv.incomplete_ride = '1' THEN REPLACE(REPLACE(csv.reason_incomplete, '"', ''), '''', '')
+                ELSE NULL END AS incomplete_reason,
+            
+            -- Lógica para duplicados (solo toma el primero)
+            ROW_NUMBER() OVER (PARTITION BY REPLACE(REPLACE(csv.booking_id, '"', ''), '''', '') ORDER BY csv.date_str, csv.time_str) AS rn
+            
         FROM csv_temp csv
+        -- JOINS a tablas de catálogo
         LEFT JOIN VEHICLE_TYPES vt ON REPLACE(REPLACE(csv.vehicle_type, '"', ''), '''', '') = vt.vehicle_type_name
         LEFT JOIN LOCATIONS pl ON REPLACE(REPLACE(csv.pickup_location, '"', ''), '''', '') = pl.location_name
         LEFT JOIN LOCATIONS dl ON REPLACE(REPLACE(csv.drop_location, '"', ''), '''', '') = dl.location_name
@@ -268,6 +311,7 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('  ✓ ' || TO_CHAR(v_count, '999,999') || ' bookings únicos insertados');
     DBMS_OUTPUT.PUT_LINE('──────────────────────────────────────────────');
 END;
+
 /
 
 CREATE OR REPLACE PROCEDURE sp_load_cancellations_ratings AS

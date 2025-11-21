@@ -11,15 +11,32 @@ SET SERVEROUTPUT ON SIZE UNLIMITED
 SET TIMING ON
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 
-PROMPT ============================================
 PROMPT   CARGANDO 148,770 registros desde CSV
-PROMPT ============================================
+
+ALTER SESSION SET NLS_NUMERIC_CHARACTERS = '.,'; 
 
 -- =====================================================
 -- PASO 1: Cargar CSV a tabla temporal
 -- =====================================================
+/*
+CREATE OR REPLACE PACKAGE pkg_load_data IS
+
+    PROCEDURE validate_date(
+        p_fecha_inicio IN DATE);
+
+    PROCEDURE cargar_report_data(
+    p_fecha_inicio IN DATE,
+    p_fecha_fin IN DATE);
+    
+    PROCEDURE cargar_tablas(
+      fecha_inicio IN DATE, 
+      fecha_fin IN DATE);
+END pkg_carga_datos;
+/*/
+
+
 PROMPT [1/5] Cargando CSV...
-ALTER SESSION SET NLS_NUMERIC_CHARACTERS = '.,';
+
 BEGIN
     DELETE FROM csv_temp;
     INSERT INTO csv_temp SELECT * FROM csv_external;
@@ -33,7 +50,9 @@ END;
 -- =====================================================
 PROMPT [2/5] Cargando catálogos...
 BEGIN
-    sp_load_catalogs;
+    pkg_load_data.sp_load_vehicle_types;
+    pkg_load_data.sp_load_payment_methods;
+    pkg_load_data.sp_load_locations;
 END;
 /
 
@@ -42,7 +61,7 @@ END;
 -- =====================================================
 PROMPT [3/5] Cargando clientes...
 BEGIN
-    sp_load_customers;
+    pkg_load_data.sp_load_customers;
 END;
 /
 
@@ -51,7 +70,7 @@ END;
 -- =====================================================
 PROMPT [4/5] Cargando ratings...
 BEGIN
-    sp_load_ratings;
+    pkg_load_data.sp_load_ratings;
 END;
 /
 
@@ -60,7 +79,7 @@ END;
 -- =====================================================
 PROMPT [5/5] Cargando bookings ...
 BEGIN
-    sp_load_bookings;
+    pkg_load_data.sp_load_bookings;
 END;
 /
 

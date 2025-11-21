@@ -192,7 +192,11 @@ ALTER TABLE BOOKINGS
             'Cancelled by Customer',
             'Cancelled by Driver',
             'Incomplete',
-            'No Driver Found'
+            'No Driver Found',
+            'Waiting',
+            'Pending',
+            'Incomplete',
+            'Cancelled'
         ));
 ALTER TABLE BOOKINGS
     ADD CONSTRAINT cancelled_by_CK CHECK (cancelled_by IN 

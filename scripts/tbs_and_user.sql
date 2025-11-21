@@ -16,14 +16,16 @@ PROMPT '════════════════════════
 PROMPT '';
 
 -- =====================================================
--- PASO 1: Crear Tablespace
+-- PASO 1: Crear Tablespaces
 -- =====================================================
 
 PROMPT '[1/3] Creando tablespace UBER_TBS...';
 
 -- Eliminar tablespace si existe (solo para desarrollo/testing)
+-- se borra el tablespace de tablas y el de indices
 BEGIN
     EXECUTE IMMEDIATE 'DROP TABLESPACE UBER_TBS INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS';
+    EXECUTE IMMEDIATE 'DROP TABLESPACE UBER_IDX INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS';
     DBMS_OUTPUT.PUT_LINE(' Tablespace anterior eliminado');
 EXCEPTION
     WHEN OTHERS THEN
@@ -37,13 +39,15 @@ END;
 
 CREATE TABLESPACE UBER_TBS
 DATAFILE 'uber_tbs01.dbf' SIZE 100M
-AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED
-SEGMENT SPACE MANAGEMENT AUTO
-EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
+AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED;
 
-PROMPT 'Tablespace UBER_TBS creado exitosamente';
-PROMPT '';
+PROMPT 'Tablespace UBER_TBS creado exitosamente (datos)';
 
+CREATE TABLESPACE UBER_IDX
+DATAFILE 'uber_idx01.dbf' SIZE 100M
+AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED;
+
+PROMPT 'Tablespace UBER_IDX creado exitosamente (indices)';
 -- =====================================================
 -- PASO 2: Crear Usuario
 -- =====================================================
@@ -70,7 +74,8 @@ ACCEPT v_password CHAR PROMPT 'Contraseña para uber_admin [UberAdmin2025]: ' DE
 CREATE USER uber_admin IDENTIFIED BY &v_password
 DEFAULT TABLESPACE UBER_TBS
 TEMPORARY TABLESPACE TEMP
-QUOTA UNLIMITED ON UBER_TBS;
+QUOTA UNLIMITED ON UBER_TBS
+QUOTA UNLIMITED ON UBER_IDX;
 
 PROMPT '  ✓ Usuario uber_admin creado';
 PROMPT '';
@@ -90,7 +95,6 @@ GRANT CREATE SEQUENCE TO uber_admin;
 GRANT CREATE TRIGGER TO uber_admin;
 GRANT CREATE PROCEDURE TO uber_admin;
 GRANT CREATE SYNONYM TO uber_admin;
-GRANT CREATE DATABASE LINK TO uber_admin;
 GRANT CREATE MATERIALIZED VIEW TO uber_admin;
 
 -- Privilegios para debugging (útil en desarrollo)
@@ -126,7 +130,7 @@ END;
 /
 
 CREATE OR REPLACE DIRECTORY CSV_DIR AS '&v_csv_path';
-GRANT READ, WRITE ON DIRECTORY CSV_DIR TO uber_admin;
+GRANT READ, WRITE  ON DIRECTORY CSV_DIR TO uber_admin;
 
 PROMPT '  ✓ Directorio CSV_DIR creado';
 PROMPT '  ✓ Permisos asignados a uber_admin';

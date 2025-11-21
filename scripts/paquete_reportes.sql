@@ -1,11 +1,11 @@
 -- Paquete para generación de reportes y análisis
 -- Proyecto: Sistema de Gestión de Viajes Uber
 -- Funcionalidades:
---   - Análisis de demanda por hora/día/mes
+
 --   - Top rutas más frecuentes
+
+--   - Métricas de tiempo promedio por viaje
+
 --   - Ingresos por método de pago
---   - Tasa de cancelación por razón
---   - Conductores más eficientes
---   - Análisis de ratings
---   - Métricas de tiempo promedio (VTAT, CTAT)
+--   - Análisis de viajes por un periodo ingresado
 

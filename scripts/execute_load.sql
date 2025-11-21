@@ -19,16 +19,12 @@ PROMPT ============================================
 -- PASO 1: Cargar CSV a tabla temporal
 -- =====================================================
 PROMPT [1/5] Cargando CSV...
+ALTER SESSION SET NLS_NUMERIC_CHARACTERS = '.,';
 BEGIN
     DELETE FROM csv_temp;
     INSERT INTO csv_temp SELECT * FROM csv_external;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('✓ ' || SQL%ROWCOUNT || ' registros cargados');
-EXCEPTION
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('✗ ERROR: ' || SQLERRM);
-        DBMS_OUTPUT.PUT_LINE('Verifica que el archivo CSV esté en la ruta correcta');
-        RAISE;
 END;
 /
 
@@ -51,20 +47,20 @@ END;
 /
 
 -- =====================================================
--- PASO 4: Cargar bookings (incluye tiempo y cancelaciones)
+-- PASO 4: Cargar ratings
 -- =====================================================
-PROMPT [4/5] Cargando bookings...
+PROMPT [4/5] Cargando ratings...
 BEGIN
-    sp_load_bookings;
+    sp_load_ratings;
 END;
 /
 
 -- =====================================================
--- PASO 5: Cargar ratings
+-- PASO 5: Cargar bookings (incluye tiempo y cancelaciones)
 -- =====================================================
-PROMPT [5/5] Cargando ratings...
+PROMPT [5/5] Cargando bookings ...
 BEGIN
-    sp_load_cancellations_ratings;
+    sp_load_bookings;
 END;
 /
 

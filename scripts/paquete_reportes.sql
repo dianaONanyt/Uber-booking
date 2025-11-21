@@ -1,13 +1,4 @@
--- Paquete para generación de reportes y análisis
--- Proyecto: Sistema de Gestión de Viajes Uber
--- Funcionalidades:
 
---   - Top rutas más frecuentes
-
---   - Métricas de tiempo promedio por viaje
-
---   - Ingresos por método de pago
---   - Análisis de viajes por un periodo ingresado
 CREATE OR REPLACE PACKAGE PKG_REPORTES AS
     PROCEDURE sp_reporte_por_estado(date_init IN DATE, date_end IN DATE);
     PROCEDURE sp_reporte_por_metodo_pago(date_init IN DATE, date_end IN DATE);

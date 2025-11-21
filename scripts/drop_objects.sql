@@ -8,9 +8,7 @@
 SET ECHO ON
 SET FEEDBACK ON
 
-PROMPT ============================================
 PROMPT INICIANDO LIMPIEZA COMPLETA
-PROMPT ============================================
 
 -- Eliminar procedimientos
 BEGIN
@@ -45,9 +43,7 @@ BEGIN
     END LOOP;
 END;
 /
--- Eliminar tablas en orden correcto (respetando FKs)
-PROMPT
-PROMPT Eliminando tablas...
+-- Eliminar tablas 
 
 BEGIN
     EXECUTE IMMEDIATE 'DROP TABLE BOOKINGS CASCADE CONSTRAINTS PURGE';
@@ -126,12 +122,9 @@ END;
 
 
 PROMPT
-PROMPT ============================================
-PROMPT ✓ LIMPIEZA COMPLETADA
-PROMPT ============================================
+PROMPT ✓ LIMPIEZA COMPLETA
 PROMPT
 PROMPT Siguiente paso:
 PROMPT   1. @create_tables.sql
 PROMPT   2. @setup_load_environment.sql
 PROMPT   3. @execute_load.sql
-PROMPT ============================================

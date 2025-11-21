@@ -2,17 +2,13 @@
 -- CREATE TABLES - Sistema Uber
 -- =================================================================
 -- Basado en: ncr_ride_bookings.csv (148,770 registros)
--- Modelo: Solo datos del CSV, CHECK constraints para catálogos
 -- =================================================================
 
 SET ECHO ON
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 
--- =================================================================
--- TABLAS DE CATÁLOGO
--- =================================================================
 
--- CUSTOMERS: Clientes del CSV --------------------------------------------------------------------
+-- CUSTOMERS: Clientes del CSV 
 CREATE TABLE CUSTOMERS (
     id VARCHAR2(50)
 ) TABLESPACE UBER_TBS;
@@ -22,7 +18,7 @@ ALTER TABLE CUSTOMERS
     ADD CONSTRAINT customer_id_PK PRIMARY KEY (id) 
     USING INDEX TABLESPACE UBER_IDX;
 
--- VEHICLE_TYPES: Tipos de vehículo del CSV----------------------------------------------------------
+-- VEHICLE_TYPES: Tipos de vehículo del CSV
 CREATE TABLE VEHICLE_TYPES (
     id NUMBER,
     name VARCHAR2(50) NOT NULL
@@ -126,9 +122,8 @@ BEGIN
 END trg_payment_method_id;
 /
 
--- =================================================================
+
 -- TABLA DE RATINGS
--- =================================================================
 
 CREATE TABLE RATINGS (
     id NUMBER,
@@ -247,18 +242,22 @@ BEGIN
 END trg_data_control;
 /
 
+
+--Tabla de auditoría
+CREATE TABLE AUDIT_LOG (
+    log_id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    machine VARCHAR2(50),
+    date_time TIMESTAMP DEFAULT SYSTIMESTAMP,
+    table_name VARCHAR2(100) NOT NULL,
+    operation_type VARCHAR2(20) NOT NULL, 
+    old_value VARCHAR2(255),
+    new_value VARCHAR2(255),
+    performed_by VARCHAR2(50)
+);
+
+
 PROMPT
-PROMPT ============================================
 PROMPT  Tablas creadas exitosamente
-PROMPT ============================================
 PROMPT
-PROMPT Tablas creadas:
-PROMPT   - CUSTOMERS
-PROMPT   - DRIVERS
-PROMPT   - VEHICLE_TYPES (con CHECK constraint)
-PROMPT   - LOCATIONS
-PROMPT   - PAYMENT_METHODS (con CHECK constraint)
-PROMPT   - BOOKINGS (tabla central con CHECK constraints)
-PROMPT   - RATINGS
-PROMPT ============================================
+
 

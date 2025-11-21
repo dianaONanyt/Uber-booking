@@ -1,8 +1,6 @@
 -- =================================================================
 -- TRUNCATE DATA - Limpia datos pero mantiene estructura
 -- =================================================================
--- Útil para recargar datos sin recrear tablas ni procedimientos
--- =================================================================
 
 SET ECHO ON
 SET FEEDBACK ON

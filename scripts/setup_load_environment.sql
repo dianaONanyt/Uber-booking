@@ -103,15 +103,9 @@ PROMPT '';
 PROMPT '[3/4] Creando procedimientos de carga...';
 
 -- Procedimiento 1: Cargar catálogos
-CREATE OR REPLACE PROCEDURE sp_load_catalogs AS
+CREATE OR REPLACE PROCEDURE sp_load_vehicle_types AS
     v_count NUMBER;
 BEGIN
-    DBMS_OUTPUT.PUT_LINE('');
-    DBMS_OUTPUT.PUT_LINE('──────────────────────────────────────────────');
-    DBMS_OUTPUT.PUT_LINE('  CARGANDO CATÁLOGOS');
-    DBMS_OUTPUT.PUT_LINE('──────────────────────────────────────────────');
-    
-    -- VEHICLE_TYPES
     DBMS_OUTPUT.PUT_LINE('[1/5] VEHICLE_TYPES...');
     INSERT INTO VEHICLE_TYPES (name)
     SELECT DISTINCT REPLACE(REPLACE(vehicle_type, '"', ''), '''', '')
@@ -121,7 +115,12 @@ BEGIN
     v_count := SQL%ROWCOUNT;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('      ✓ ' || v_count || ' tipos insertados');
-    
+END sp_load_vehicle_types;
+/
+
+CREATE OR REPLACE PROCEDURE sp_load_payment_methods AS
+    v_count NUMBER;
+BEGIN
     -- PAYMENT_METHODS
     DBMS_OUTPUT.PUT_LINE('[2/5] PAYMENT_METHODS...');
     
@@ -137,11 +136,12 @@ BEGIN
     v_count := SQL%ROWCOUNT;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('      ✓ ' || v_count || ' métodos insertados');
-    
-    -- BOOKING_STATUS removed: 'status' is modelled as CHECK on BOOKINGS (see create_tables.sql)
-    DBMS_OUTPUT.PUT_LINE('[3/5] BOOKING_STATUS: SKIPPED (now CHECK on BOOKINGS)');
-    v_count := 0;
-    
+END sp_load_payment_methods;
+/
+
+CREATE OR REPLACE PROCEDURE sp_load_locations AS
+    v_count NUMBER;
+BEGIN
     -- LOCATIONS
     DBMS_OUTPUT.PUT_LINE('[4/5] LOCATIONS...');
     INSERT INTO LOCATIONS (name)
@@ -157,16 +157,9 @@ BEGIN
     v_count := SQL%ROWCOUNT;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('      ✓ ' || v_count || ' ubicaciones insertadas');
-    
-        -- CANCELLATION_REASONS removed: cancellation reasons will be stored inside BOOKINGS.cancellation_reason
-        DBMS_OUTPUT.PUT_LINE('[5/5] CANCELLATION_REASONS: SKIPPED (moved into BOOKINGS.cancellation_reason)');
-        v_count := 0;
-    
-    DBMS_OUTPUT.PUT_LINE('──────────────────────────────────────────────');
-    DBMS_OUTPUT.PUT_LINE('  ✓ CATÁLOGOS CARGADOS');
-    DBMS_OUTPUT.PUT_LINE('──────────────────────────────────────────────');
-END sp_load_catalogs;
+END sp_load_locations;
 /
+
 
 -- Procedimiento: Cargar clientes
 CREATE OR REPLACE PROCEDURE sp_load_customers AS

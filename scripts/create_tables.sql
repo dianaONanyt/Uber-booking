@@ -220,6 +220,33 @@ ALTER TABLE BOOKINGS ADD(
 );
 
 
+
+-- CREACIÓN DE TABLA DE CONTROL DE CARGA
+
+CREATE TABLE DATA_CONTROL (
+    control_id NUMBER,
+    table_name VARCHAR2(100) NOT NULL,
+    rows_affected NUMBER,
+    operation_type VARCHAR2(20) NOT NULL,
+    operation_date TIMESTAMP DEFAULT SYSTIMESTAMP,
+    responsible_user VARCHAR2(100)
+);
+
+CREATE SEQUENCE data_control_seq START WITH 1 INCREMENT BY 1 NOCACHE;
+ALTER TABLE DATA_CONTROL 
+    ADD CONSTRAINT data_control_PK PRIMARY KEY (control_id) 
+    USING INDEX TABLESPACE UBER_IDX;
+
+CREATE OR REPLACE TRIGGER trg_data_control
+BEFORE INSERT ON DATA_CONTROL
+FOR EACH ROW
+BEGIN
+    IF :NEW.control_id IS NULL THEN
+        :NEW.control_id := data_control_seq.NEXTVAL;
+    END IF;
+END trg_data_control;
+/
+
 PROMPT
 PROMPT ============================================
 PROMPT  Tablas creadas exitosamente

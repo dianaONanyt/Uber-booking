@@ -18,24 +18,6 @@ ALTER SESSION SET NLS_NUMERIC_CHARACTERS = '.,';
 -- =====================================================
 -- PASO 1: Cargar CSV a tabla temporal
 -- =====================================================
-/*
-CREATE OR REPLACE PACKAGE pkg_load_data IS
-
-    PROCEDURE validate_date(
-        p_fecha_inicio IN DATE);
-
-    PROCEDURE cargar_report_data(
-    p_fecha_inicio IN DATE,
-    p_fecha_fin IN DATE);
-    
-    PROCEDURE cargar_tablas(
-      fecha_inicio IN DATE, 
-      fecha_fin IN DATE);
-END pkg_carga_datos;
-/*/
-
-
-PROMPT [1/5] Cargando CSV...
 
 BEGIN
     DELETE FROM csv_temp;
@@ -45,53 +27,42 @@ BEGIN
 END;
 /
 
--- =====================================================
--- PASO 2: Cargar catálogos
--- =====================================================
-PROMPT [2/5] Cargando catálogos...
-BEGIN
-    pkg_load_data.sp_load_vehicle_types;
-    pkg_load_data.sp_load_payment_methods;
-    pkg_load_data.sp_load_locations;
-END;
+
+CREATE OR REPLACE FUNCTION validate_date(
+        p_date_load IN DATE) RETURN BOOLEAN IS
+        v_day_of_week VARCHAR2(10);
+    BEGIN 
+        
+        v_day_of_week := TO_CHAR(p_date_load, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH');
+        
+        IF v_day_of_week IN ('SUN','SAT') THEN
+            RAISE_APPLICATION_ERROR(-20010, 'La fecha de carga debe ser un día laboral (Lunes a Viernes).');
+        ELSIF TRUNC(p_date_load) < TRUNC(SYSDATE) THEN
+            RAISE_APPLICATION_ERROR(-20012, 'La fecha de carga no puede ser una fecha pasada.');
+        ELSIF p_date_load > SYSDATE + 3 THEN
+            RAISE_APPLICATION_ERROR(-20013, 'La fecha de carga no puede ser mayor a 3 días desde hoy.');
+        END IF;
+        RETURN TRUE;
+    EXCEPTION 
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20011, 'Error al validar la fecha de carga: ' || SQLERRM);
+    END validate_date;
 /
 
--- =====================================================
--- PASO 3: Cargar clientes
--- =====================================================
-PROMPT [3/5] Cargando clientes...
+CREATE OR REPLACE PROCEDURE sp_fill_tables (
+        p_date_load IN DATE) AS
 BEGIN
-    pkg_load_data.sp_load_customers;
-END;
+    IF validate_date(p_date_load) THEN
+        pkg_load_data.sp_load_vehicle_types;
+        pkg_load_data.sp_load_payment_methods;
+        pkg_load_data.sp_load_locations;
+        pkg_load_data.sp_load_customers;
+        pkg_load_data.sp_load_ratings;
+        pkg_load_data.sp_load_bookings;
+        pkg_load_data.sp_show_summary;
+    ELSE
+        RAISE_APPLICATION_ERROR(-20020, 'La fecha de carga no es válida. Proceso abortado.');
+    END IF;
+   
+END sp_fill_tables;
 /
-
--- =====================================================
--- PASO 4: Cargar ratings
--- =====================================================
-PROMPT [4/5] Cargando ratings...
-BEGIN
-    pkg_load_data.sp_load_ratings;
-END;
-/
-
--- =====================================================
--- PASO 5: Cargar bookings (incluye tiempo y cancelaciones)
--- =====================================================
-PROMPT [5/5] Cargando bookings ...
-BEGIN
-    pkg_load_data.sp_load_bookings;
-END;
-/
-
--- =====================================================
--- RESUMEN
--- =====================================================
-PROMPT
-PROMPT ============================================
-BEGIN
-    sp_show_summary;
-END;
-/
-PROMPT ============================================
-PROMPT ✓ CARGA COMPLETADA
-PROMPT ============================================

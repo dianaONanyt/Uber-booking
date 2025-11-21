@@ -37,6 +37,14 @@ BEGIN
     END LOOP;
 END;
 /
+-- Eliminar paquetes
+BEGIN
+    FOR proc IN (SELECT object_name FROM user_objects WHERE object_type = 'PACKAGE BODY') LOOP
+        EXECUTE IMMEDIATE 'DROP PACKAGE BODY ' || proc.object_name;
+        DBMS_OUTPUT.PUT_LINE('✓ Package Body eliminado: ' || proc.object_name);
+    END LOOP;
+END;
+/
 -- Eliminar tablas en orden correcto (respetando FKs)
 PROMPT
 PROMPT Eliminando tablas...
@@ -107,6 +115,15 @@ EXCEPTION
     WHEN OTHERS THEN DBMS_OUTPUT.PUT_LINE('  csv_external no existe');
 END;
 /
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE data_control PURGE';
+    DBMS_OUTPUT.PUT_LINE('✓ data_control eliminada');
+EXCEPTION
+    WHEN OTHERS THEN DBMS_OUTPUT.PUT_LINE('  data_control no existe');
+END;
+/
+
 
 PROMPT
 PROMPT ============================================

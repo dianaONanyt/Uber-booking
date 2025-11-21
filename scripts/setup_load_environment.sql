@@ -99,6 +99,7 @@ CREATE OR REPLACE PACKAGE pkg_load_data AS
     PROCEDURE sp_load_customers;
     PROCEDURE sp_load_ratings;
     PROCEDURE sp_load_bookings;
+    PROCEDURE sp_show_summary;
 END pkg_load_data;
 /
 
@@ -116,6 +117,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_load_data AS
         v_count := SQL%ROWCOUNT;
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('      ✓ ' || v_count || ' tipos insertados');
+        sp_control_register('VEHICLE_TYPES', v_count, 'INSERT');
     END sp_load_vehicle_types;
 
     PROCEDURE sp_load_payment_methods AS
@@ -136,6 +138,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_load_data AS
         v_count := SQL%ROWCOUNT;
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('      ✓ ' || v_count || ' métodos insertados');
+        sp_control_register('PAYMENT_METHODS', v_count, 'INSERT');
     END sp_load_payment_methods;
 
     PROCEDURE sp_load_locations AS
@@ -156,6 +159,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_load_data AS
         v_count := SQL%ROWCOUNT;
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('      ✓ ' || v_count || ' ubicaciones insertadas');
+        sp_control_register('LOCATIONS', v_count, 'INSERT');
     END sp_load_locations;
 
 
@@ -172,6 +176,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_load_data AS
         v_count := SQL%ROWCOUNT;
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('  ✓ ' || v_count || ' clientes insertados');
+        sp_control_register('CUSTOMERS', v_count, 'INSERT');
     END sp_load_customers;
 
     PROCEDURE sp_load_ratings AS
@@ -217,6 +222,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_load_data AS
         v_count := SQL%ROWCOUNT;
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('	✓ ' || TO_CHAR(v_count, '999,999') || ' ratings únicos insertados');
+        sp_control_register('RATINGS', v_count, 'INSERT');
     END sp_load_ratings;
     
 
@@ -343,6 +349,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_load_data AS
         v_count := SQL%ROWCOUNT;
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('	✓ ' || TO_CHAR(v_count, '999,999') || ' bookings únicos insertados');
+        sp_control_register('BOOKINGS', v_count, 'INSERT');
     END  sp_load_bookings;
 
     -- Procedimiento 6: Mostrar resumen
